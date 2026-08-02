@@ -25,9 +25,10 @@ automatically to GitHub Pages.
 3. **Enable GitHub Pages.** In the repo: Settings → Pages → Source →
    "GitHub Actions". That's it — the `deploy.yml` workflow handles the rest.
 
-4. **Add your Anthropic API key as a secret.** Settings → Secrets and
-   variables → Actions → New repository secret → name it
-   `ANTHROPIC_API_KEY`, paste a key from console.anthropic.com.
+4. **Add your Gemini API key as a secret.** Get a free key at
+   https://aistudio.google.com/apikey (no credit card needed). Then in
+   your repo: Settings → Secrets and variables → Actions → New repository
+   secret → name it `GEMINI_API_KEY`, paste the key.
 
 5. **Push to `main`.** This triggers the first deploy. Your site will be
    live at `https://YOUR_USERNAME.github.io/coherence-log/` within a
@@ -36,7 +37,7 @@ automatically to GitHub Pages.
 6. **Test the generator locally (optional but recommended):**
    ```bash
    npm install
-   ANTHROPIC_API_KEY=sk-... npm run generate
+   GEMINI_API_KEY=... npm run generate
    ```
    This writes a new file into `src/content/posts/` with `draft: true`
    in its frontmatter. Read it, edit it if needed, flip `draft` to
@@ -76,8 +77,13 @@ Once you have ~20-30 posts and some organic traffic:
 
 ## Notes
 
-- The `claude-sonnet-5` model string in the generator script is current
-  as of writing — check https://docs.claude.com for the latest
-  recommended model before you rely on this long-term.
+- Uses Google's Gemini API (`gemini-2.5-flash`), which has a genuinely
+  free tier — no credit card required. One post every 10 days uses a
+  tiny fraction of the daily quota. Free-tier limits and models change
+  over time, so check https://ai.google.dev/gemini-api/docs if the
+  script ever errors out.
 - GitHub's free tier for public repos includes unlimited Pages hosting
   and enough Actions minutes for this workflow's needs.
+- One tradeoff of free-tier APIs: your prompts may be used to improve
+  Google's models. Fine for a public blog like this — just don't feed
+  it anything private.

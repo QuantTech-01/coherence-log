@@ -1,12 +1,16 @@
 // scripts/generate-post.mjs
 //
-// Pulls recent items from a few free feeds, asks Claude to draft one post
+// Pulls recent items from a few free feeds, asks Gemini to draft one post
 // synthesizing them (with your own framing, not just paraphrasing), and
 // writes a new Markdown file into src/content/posts/.
 //
-// Requires env var ANTHROPIC_API_KEY (set as a GitHub Actions secret).
+// Uses Google's Gemini API — it has a genuinely free tier (no credit card
+// needed) that's more than enough for one post every 10 days. Get a key at
+// https://aistudio.google.com/apikey
 //
-// Run locally with:  ANTHROPIC_API_KEY=sk-... npm run generate
+// Requires env var GEMINI_API_KEY (set as a GitHub Actions secret).
+//
+// Run locally with:  GEMINI_API_KEY=... npm run generate
 
 import Parser from 'rss-parser';
 import { writeFile, mkdir, readFile, access } from 'node:fs/promises';
@@ -92,44 +96,37 @@ Keep it to 400-600 words.`;
 
   const user = `Here are recent items to consider (you don't have to use all of them):\n\n${sourceList}\n\nDraft one focused post synthesizing the most interesting 2-4 of these.`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-5', // check https://docs.claude.com for the current recommended model
-      max_tokens: 1500,
-      system,
-      messages: [{ role: 'user', content: user }],
-    }),
-  });
+  const GEMINI_MODEL = 'gemini-2.5-flash'; // check https://ai.google.dev/gemini-api/docs/models for the current free-tier model
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!res.ok) {
-    throw new Error(`Anthropic API error ${res.status}: ${await res.text()}`);
+  async function callGemini(systemInstruction, userText, maxTokens) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ role: 'user', parts: [{ text: userText }] }],
+          generationConfig: { maxOutputTokens: maxTokens },
+        }),
+      }
+    );
+    if (!res.ok) {
+      throw new Error(`Gemini API error ${res.status}: ${await res.text()}`);
+    }
+    const data = await res.json();
+    return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
   }
-  const data = await res.json();
-  const body = data.content.map((b) => (b.type === 'text' ? b.text : '')).join('\n').trim();
+
+  const body = await callGemini(system, user, 2000);
 
   // ask for a short title + summary separately (simpler + more reliable than parsing it out of the body)
-  const titleRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-5',
-      max_tokens: 200,
-      system: 'Respond with ONLY valid JSON, no preamble, no markdown fences: {"title": "...", "summary": "..."}. Title under 12 words, summary under 25 words, both describing the post body given to you.',
-      messages: [{ role: 'user', content: body }],
-    }),
-  });
-  const titleData = await titleRes.json();
-  const titleText = titleData.content.map((b) => (b.type === 'text' ? b.text : '')).join('').trim();
+  const titleText = await callGemini(
+    'Respond with ONLY valid JSON, no preamble, no markdown fences: {"title": "...", "summary": "..."}. Title under 12 words, summary under 25 words, both describing the post body given to you.',
+    body,
+    200
+  );
   let title = 'Untitled entry';
   let summary = '';
   try {
@@ -149,8 +146,8 @@ function slugify(title) {
 }
 
 async function main() {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('Missing ANTHROPIC_API_KEY env var.');
+  if (!process.env.GEMINI_API_KEY) {
+    console.error('Missing GEMINI_API_KEY env var.');
     process.exit(1);
   }
 
