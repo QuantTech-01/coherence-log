@@ -23,10 +23,13 @@ const CADENCE_DAYS = 10;
 
 // --- 1. enforce the 10-day cadence regardless of when the workflow runs ---
 async function shouldRunToday() {
+  if (process.env.FORCE_GENERATE === 'true') return true;
   try {
     const raw = await readFile(STATE_FILE, 'utf-8');
     const state = JSON.parse(raw);
+    if (!state.lastRun) return true; // no valid last-run date recorded -> treat as first run
     const last = new Date(state.lastRun);
+    if (Number.isNaN(last.getTime())) return true; // malformed date -> treat as first run
     const daysSince = (Date.now() - last.getTime()) / (1000 * 60 * 60 * 24);
     return daysSince >= CADENCE_DAYS;
   } catch {
