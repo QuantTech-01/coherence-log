@@ -96,27 +96,36 @@ Keep it to 400-600 words.`;
 
   const user = `Here are recent items to consider (you don't have to use all of them):\n\n${sourceList}\n\nDraft one focused post synthesizing the most interesting 2-4 of these.`;
 
-  const GEMINI_MODEL = 'gemini-2.5-flash'; // check https://ai.google.dev/gemini-api/docs/models for the current free-tier model
+  // 'gemini-flash-latest' auto-updates to Google's current recommended free
+  // Flash model, so this should keep working as models get deprecated over
+  // time. If it ever 404s, check https://ai.google.dev/gemini-api/docs/models
+  // for the current free-tier model name and update FALLBACK_MODELS below.
+  const MODEL_CANDIDATES = ['gemini-flash-latest', 'gemini-2.5-flash-lite'];
   const apiKey = process.env.GEMINI_API_KEY;
 
   async function callGemini(systemInstruction, userText, maxTokens) {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents: [{ role: 'user', parts: [{ text: userText }] }],
-          generationConfig: { maxOutputTokens: maxTokens },
-        }),
+    let lastError;
+    for (const model of MODEL_CANDIDATES) {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemInstruction }] },
+            contents: [{ role: 'user', parts: [{ text: userText }] }],
+            generationConfig: { maxOutputTokens: maxTokens },
+          }),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
       }
-    );
-    if (!res.ok) {
-      throw new Error(`Gemini API error ${res.status}: ${await res.text()}`);
+      lastError = new Error(`Gemini API error ${res.status} (model ${model}): ${await res.text()}`);
+      console.error(lastError.message, '— trying next candidate model if any.');
     }
-    const data = await res.json();
-    return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+    throw lastError;
   }
 
   const body = await callGemini(system, user, 2000);
