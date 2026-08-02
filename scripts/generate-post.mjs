@@ -52,7 +52,7 @@ async function pickTrack() {
 // --- 3. free source feeds ---
 const FEEDS = {
   quantum: [
-    'https://export.arxiv.org/rss/quant-ph', // arXiv quant-ph new submissions
+    'https://rss.arxiv.org/rss/quant-ph', // arXiv quant-ph new submissions
   ],
   software: [
     'https://hnrss.org/frontpage', // Hacker News front page as RSS
@@ -114,7 +114,10 @@ Keep it to 400-600 words.`;
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemInstruction }] },
             contents: [{ role: 'user', parts: [{ text: userText }] }],
-            generationConfig: { maxOutputTokens: maxTokens },
+            generationConfig: {
+            maxOutputTokens: maxTokens,
+            thinkingConfig: { thinkingBudget: 0 }, // avoid burning the token budget on hidden reasoning
+          },
           }),
         }
       );
@@ -128,13 +131,13 @@ Keep it to 400-600 words.`;
     throw lastError;
   }
 
-  const body = await callGemini(system, user, 2000);
+  const body = await callGemini(system, user, 3000);
 
   // ask for a short title + summary separately (simpler + more reliable than parsing it out of the body)
   const titleText = await callGemini(
     'Respond with ONLY valid JSON, no preamble, no markdown fences: {"title": "...", "summary": "..."}. Title under 12 words, summary under 25 words, both describing the post body given to you.',
     body,
-    200
+    400
   );
   let title = 'Untitled entry';
   let summary = '';
