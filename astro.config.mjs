@@ -6,6 +6,6 @@ import { defineConfig } from 'astro/config';
 //   site: 'https://malaika.github.io'
 //   base: '/coherence-log'
 export default defineConfig({
-  site: 'https://QuantTech-01.github.io',
-  base: '/coherence-log',
+  site: 'https://YOUR_USERNAME.github.io',
+  base: '/coherence-log/',
 });
