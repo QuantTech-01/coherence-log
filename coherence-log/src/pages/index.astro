@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<BaseLayout title="Coherence Log">
+  <section>
+    {posts.map((post) => (
+      <article style="margin-bottom: 2.75rem;">
+        <div class="eyebrow">
+          <span class={`dot ${post.data.track}`}></span>
+          <span class={`track-label ${post.data.track}`}>{post.data.track}</span>
+          <span style="margin-left:0.75em;">
+            {post.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })}
+          </span>
+        </div>
+        <h2 style="font-size:1.5rem; margin-top:0.4rem;">
+          <a href={`${import.meta.env.BASE_URL}posts/${post.slug}/`} style="text-decoration:none;">{post.data.title}</a>
+        </h2>
+        <p style="color:var(--muted); margin-top:0.2rem;">{post.data.summary}</p>
+      </article>
+    ))}
+    {posts.length === 0 && (
+      <p style="color:var(--muted);">No posts yet — run <code>npm run generate</code> or add one to src/content/posts.</p>
+    )}
+  </section>
+</BaseLayout>

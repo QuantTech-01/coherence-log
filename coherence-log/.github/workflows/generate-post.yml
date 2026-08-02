@@ -1,0 +1,36 @@
+name: Generate post
+
+on:
+  schedule:
+    # runs daily at 08:00 UTC; the script itself skips unless 10+ days
+    # have passed since the last successful generation (see .generator-state.json)
+    - cron: '0 8 * * *'
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Generate post
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npm run generate
+
+      - name: Commit new post if one was created
+        run: |
+          git config user.name "coherence-log-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/content/posts .generator-state.json
+          git diff --cached --quiet || git commit -m "Auto-generate post [skip ci]"
+          git push
