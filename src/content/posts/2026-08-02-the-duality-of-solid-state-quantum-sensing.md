@@ -5,7 +5,7 @@ track: quantum
 summary: "Solid-state quantum sensing faces a tension between nanoscale spatial resolution and macroscopic photonic integration, highlighting the need for better neighborhood engineering."
 sources:
   []
-draft: true
+draft: false
 ---
 
 There is a quiet tension in solid-state quantum sensing right now. On one side, we have the relentless pursuit of molecular-scale spatial resolution shoving spin defects closer and closer to surfaces, trading bulk coherence for nanoscale proximity. On the other, we are seeing a massive push toward macroscopic engineering: integrating these defects into dense photonic architectures to pull out more photons per second without burning out the pump laser.
