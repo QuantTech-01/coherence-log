@@ -99,11 +99,10 @@ Keep it to 400-600 words.`;
 
   const user = `Here are recent items to consider (you don't have to use all of them):\n\n${sourceList}\n\nDraft one focused post synthesizing the most interesting 2-4 of these.`;
 
-  // 'gemini-flash-latest' auto-updates to Google's current recommended free
-  // Flash model, so this should keep working as models get deprecated over
-  // time. If it ever 404s, check https://ai.google.dev/gemini-api/docs/models
-  // for the current free-tier model name and update FALLBACK_MODELS below.
-  const MODEL_CANDIDATES = ['gemini-flash-latest', 'gemini-2.5-flash-lite'];
+  // Google deprecates/renames Gemini models fairly often. If both of these
+  // ever 404, check https://ai.google.dev/gemini-api/docs/models for the
+  // current free-tier model names and update this list.
+  const MODEL_CANDIDATES = ['gemini-3.5-flash-lite', 'gemini-3.6-flash'];
   const apiKey = process.env.GEMINI_API_KEY;
 
   async function callGemini(systemInstruction, userText, maxTokens) {
@@ -117,10 +116,7 @@ Keep it to 400-600 words.`;
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemInstruction }] },
             contents: [{ role: 'user', parts: [{ text: userText }] }],
-            generationConfig: {
-            maxOutputTokens: maxTokens,
-            thinkingConfig: { thinkingBudget: 0 }, // avoid burning the token budget on hidden reasoning
-          },
+            generationConfig: { maxOutputTokens: maxTokens },
           }),
         }
       );
@@ -134,13 +130,13 @@ Keep it to 400-600 words.`;
     throw lastError;
   }
 
-  const body = await callGemini(system, user, 3000);
+  const body = await callGemini(system, user, 4096);
 
   // ask for a short title + summary separately (simpler + more reliable than parsing it out of the body)
   const titleText = await callGemini(
     'Respond with ONLY valid JSON, no preamble, no markdown fences: {"title": "...", "summary": "..."}. Title under 12 words, summary under 25 words, both describing the post body given to you.',
     body,
-    400
+    600
   );
   let title = 'Untitled entry';
   let summary = '';
