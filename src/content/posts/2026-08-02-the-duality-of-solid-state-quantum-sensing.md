@@ -4,8 +4,7 @@ date: 2026-08-02
 track: quantum
 topics: ["ODMR", "hBN defects"]
 summary: "..."
-sources:
-  ...
+sources: []
 draft: false
 ---
 
