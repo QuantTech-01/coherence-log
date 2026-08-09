@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const topicSet = new Set(allPosts.flatMap((p) => p.data.topics || []));
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<BaseLayout title="Topics — Coherence Log">
+  <div class="eyebrow">Topics</div>
+  <h1>Topics</h1>
+  <ul style="list-style:none; padding:0; display:flex; flex-wrap:wrap; gap:1rem;">
+    {Array.from(topicSet).map((topic) => (
+      <li>
+        <a href={`${base}/topics/${topic.toLowerCase().replace(/\s+/g, '-')}/`} class="track-label" style="text-decoration:none;">
+          #{topic}
+        </a>
+      </li>
+    ))}
+  </ul>
+</BaseLayout>
