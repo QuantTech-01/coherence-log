@@ -7,7 +7,7 @@ const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueO
 <BaseLayout title="Coherence Log">
   <section>
     {posts.map((post) => (
-      <article style="margin-bottom: 2.75rem;">
+      <article class="fade-in-up" style="margin-bottom: 2.75rem;">
         <div class="eyebrow">
           <span class={`dot ${post.data.track}`}></span>
           <span class={`track-label ${post.data.track}`}>{post.data.track}</span>
