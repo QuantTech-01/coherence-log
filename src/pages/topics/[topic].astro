@@ -4,14 +4,14 @@ import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
   const allPosts = await getCollection('posts', ({ data }) => !data.draft);
-  const topicSet = new Set(allPosts.flatMap((p) => p.data.topics));
+  const topicSet = new Set(allPosts.flatMap((p) => p.data.topics || []));
 
   return Array.from(topicSet).map((topic) => ({
     params: { topic: topic.toLowerCase().replace(/\s+/g, '-') },
     props: {
       topic,
       posts: allPosts
-        .filter((p) => p.data.topics.includes(topic))
+        .filter((p) => (p.data.topics || []).includes(topic))
         .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()),
     },
   }));
