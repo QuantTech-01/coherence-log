@@ -1,10 +1,11 @@
 ---
-title: "The Duality of Solid-State Quantum Sensing"
+title: "..."
 date: 2026-08-02
 track: quantum
-summary: "Solid-state quantum sensing faces a tension between nanoscale spatial resolution and macroscopic photonic integration, highlighting the need for better neighborhood engineering."
+topics: ["ODMR", "hBN defects"]
+summary: "..."
 sources:
-  []
+  ...
 draft: false
 ---
 
