@@ -1,8 +1,9 @@
 // scripts/generate-post.mjs
 //
 // Pulls recent items from a few free feeds, asks Gemini to draft one post
-// synthesizing them (with your own framing, not just paraphrasing), and
-// writes a new Markdown file into src/content/posts/.
+// synthesizing them (with your own framing, not just paraphrasing), generates
+// an accompanying illustration, and writes a new Markdown file into
+// src/content/posts/.
 //
 // Uses Google's Gemini API — it has a genuinely free tier (no credit card
 // needed) that's more than enough for one post every 10 days. Get a key at
@@ -13,13 +14,17 @@
 // Run locally with:  GEMINI_API_KEY=... npm run generate
 
 import Parser from 'rss-parser';
-import { writeFile, mkdir, readFile, access } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const POSTS_DIR = path.join(ROOT, 'src/content/posts');
+const IMAGES_DIR = path.join(ROOT, 'public/images');
 const STATE_FILE = path.join(ROOT, '.generator-state.json');
 const CADENCE_DAYS = 10;
+
+// must match `base` in astro.config.mjs — update both together if you rename the repo
+const BASE_PATH = '/coherence-log';
 
 // --- 1. enforce the 10-day cadence regardless of when the workflow runs ---
 async function shouldRunToday() {
@@ -35,10 +40,6 @@ async function shouldRunToday() {
   } catch {
     return true; // no state file yet -> first run
   }
-}
-
-async function recordRun() {
-  await writeFile(STATE_FILE, JSON.stringify({ lastRun: new Date().toISOString() }, null, 2));
 }
 
 // --- 2. pick a track to alternate quantum / software each run ---
@@ -80,7 +81,7 @@ async function fetchItems(track) {
   return items;
 }
 
-// --- 4. draft the post with Claude ---
+// --- 4. draft the post text with Gemini ---
 async function draftPost(track, items) {
   const sourceList = items
     .map((it, idx) => `${idx + 1}. ${it.title} — ${it.summary} (${it.link})`)
@@ -151,7 +152,51 @@ Keep it to 400-600 words.`;
   return { title, summary, body };
 }
 
-// --- 5. write the file ---
+// --- 5. generate an accompanying illustration with Gemini's free image model ---
+async function generateImage(title, summary, track) {
+  // "Nano Banana" — Google's free-tier image model as of writing. If this
+  // ever 404s/errors, check https://ai.google.dev/gemini-api/docs/models
+  // for the current free-tier image model name and update this.
+  const IMAGE_MODEL = 'gemini-2.5-flash-image';
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  const style = track === 'quantum'
+    ? 'a clean, minimal scientific illustration in the style of a physics textbook diagram — muted teal and dark ink tones, precise linework, no text or labels'
+    : 'a clean, minimal technical illustration evoking software/systems architecture — muted amber and dark ink tones, precise linework, no text or labels';
+
+  const prompt = `Create ${style}, illustrating the theme of this article: "${title}" — ${summary}. Abstract or conceptual is fine; avoid literal photorealism, avoid any text or logos.`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        }),
+      }
+    );
+    if (!res.ok) {
+      console.error(`Image generation failed (${res.status}): ${await res.text()}`);
+      return null;
+    }
+    const data = await res.json();
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((p) => p.inlineData || p.inline_data);
+    const inline = imagePart?.inlineData || imagePart?.inline_data;
+    if (!inline?.data) {
+      console.error('No image data in response — skipping illustration.');
+      return null;
+    }
+    return Buffer.from(inline.data, 'base64');
+  } catch (err) {
+    console.error('Image generation error, skipping illustration:', err.message);
+    return null;
+  }
+}
+
+// --- 6. write the files ---
 function slugify(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
@@ -175,6 +220,20 @@ async function main() {
 
   const date = new Date().toISOString().slice(0, 10);
   const slug = `${date}-${slugify(title)}`;
+
+  console.log('Generating illustration...');
+  const imageBuffer = await generateImage(title, summary, track);
+
+  let bodyWithImage = body;
+  if (imageBuffer) {
+    await mkdir(IMAGES_DIR, { recursive: true });
+    await writeFile(path.join(IMAGES_DIR, `${slug}.png`), imageBuffer);
+    console.log(`Wrote public/images/${slug}.png`);
+    bodyWithImage = `![Illustration for "${title}"](${BASE_PATH}/images/${slug}.png)\n\n${body}`;
+  } else {
+    console.log('No illustration generated — post will publish without one.');
+  }
+
   const sourcesYaml = items.slice(0, 4).map((it) => `  - label: ${JSON.stringify(it.title)}\n    url: ${JSON.stringify(it.link)}`).join('\n');
 
   const frontmatter = `---
@@ -187,7 +246,7 @@ ${sourcesYaml || '  []'}
 draft: true
 ---
 
-${body}
+${bodyWithImage}
 `;
 
   await mkdir(POSTS_DIR, { recursive: true });
