@@ -12,7 +12,7 @@ sources:
     url: "https://arxiv.org/abs/2608.20453"
   - label: "To Scale Up or To Scale Out: Evaluating Space-Time Costs of Compiled Logical Circuits on Modular Superconducting Quantum Processors"
     url: "https://arxiv.org/abs/2608.20462"
-draft: true
+draft: False
 ---
 
 As we grind through the late-NISQ, early-fault-tolerant transition, the community's focus is visibly splitting into two camps: those trying to brute-force bigger monolithic layouts, and those rethinking how we interface with physical systems at the component and sensing level. Two recent preprints caught my eye this week because they address the foundational friction in how we handle quantum information—one at the programming language abstraction layer, and the other at the messy hardware boundary of quantum sensing.
