@@ -12,7 +12,7 @@ sources:
     url: "https://chinaonchina.com/article/chen-dawei-returns-enters-the-large-model-sector"
   - label: "Mark Cuban: Why US hospitals \"don't know their costs\""
     url: "https://www.beckershospitalreview.com/finance/mark-cuban-why-us-hospitals-dont-know-their-costs/"
-draft: true
+draft: false
 ---
 
 Infrastructure decisions are often forced upon us by the scale of the problems we run into, but occasionally a major version release arrives that forces us to re-evaluate how we handle data at a foundational level. That’s the feeling looking over the pre-release of Polars 2.0. Coming on the heels of years where pandas dominated numerical workflows despite its well-known memory and GIL bottlenecks, Polars carved out a necessary space by leaning into Apache Arrow and multithreaded execution in Rust. 
