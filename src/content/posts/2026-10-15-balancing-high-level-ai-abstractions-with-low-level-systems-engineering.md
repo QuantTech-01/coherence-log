@@ -12,7 +12,7 @@ sources:
     url: "https://lists.ubuntu.com/archives/ubuntu-announce/2026-October/000330.html"
   - label: "Show HN: Unfenced – Land for sale that borders public land"
     url: "https://unfenced.land/"
-draft: true
+draft: False
 ---
 
 In experimental physics, we spend an inordinate amount of time managing state. Whether it's coordinating photon-counting logic across FPGAs or wrangling memory buffers for real-time homodyne detection, memory fragmentation and lifecycle overhead are the quiet killers of performance. That’s why I always find myself drawn back to systems engineering basics—even as the software world gets increasingly obsessed with AI workflows and heavy abstraction layers.
@@ -23,7 +23,7 @@ In a world where garbage collection and massive memory footprints are treated as
 
 Of course, the software stack above the metal is pulling in the opposite direction. AWS Labs recently dropped `aidlc`, an adaptive workflow steering framework designed to govern AI coding agents. We are moving past the era of treating LLMs as glorified autocomplete engines and trying to wrap them in structured, stateful control loops. 
 
-The tension here is palpable. On one hand, we have infrastructure trying to abstract away mechanical sympathy entirely, wrapping everything in agentic workflows and heavy on-device models. On the other hand, the foundational primitives—how we tunnel data between devices (like the Iroh-powered `Flipflop` file-sharing utility), how we allocate memory, and how we boot our hardware cleanly (as seen with the Libreboot 26.10 release)—still rely on engineers sweating the implementation details.
+The tension here is palpable. On one hand, we have infrastructure trying to abstract away mechanical sympathy entirely, wrapping everything in agentic workflows and heavy on-device models. On the other hand, the foundational primitives and how we tunnel data between devices (like the Iroh-powered `Flipflop` file-sharing utility), how we allocate memory, and how we boot our hardware cleanly (as seen with the Libreboot 26.10 release), still rely on engineers sweating the implementation details.
 
 As researchers and builders, we are caught in the middle. We want the velocity that AI agents and modern tooling promise, but when your experiment hits a latency wall or a mysterious memory leak creeps into your data-acquisition pipeline, prompt engineering won't save you. You have to drop down the stack. 
 
