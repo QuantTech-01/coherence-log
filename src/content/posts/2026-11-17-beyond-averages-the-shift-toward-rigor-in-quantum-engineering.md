@@ -12,7 +12,7 @@ sources:
     url: "https://arxiv.org/abs/2611.18829"
   - label: "Metamorphic Testing of Quantum Software based on Stabilizer States"
     url: "https://arxiv.org/abs/2611.18838"
-draft: true
+draft: false
 ---
 
 Randomized benchmarking has long been the bread and butter of gate-set characterization, but standard metrics like average fidelity are exceptionally good at sweeping dirt under the rug. When you compress a noisy quantum circuit into a single trajectory-independent decay rate via Clifford twirling, you implicitly wash out the state-dependent transition errors that actually dictate circuit failure in real-world hardware. 
