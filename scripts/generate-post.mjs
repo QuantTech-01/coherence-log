@@ -57,9 +57,10 @@ async function pickTrack() {
 const FEEDS = {
   quantum: [
     'https://rss.arxiv.org/rss/quant-ph', // arXiv quant-ph new submissions
+    'https://rss.arxiv.org/rss/physics.optics',
   ],
-  software: [
-    'https://hnrss.org/frontpage', // Hacker News front page as RSS
+  software: [ 
+    'https://rss.arxiv.org/rss/cs.SE', 
   ],
 };
 
@@ -88,8 +89,8 @@ async function draftPost(track, items) {
     .join('\n');
 
   const trackContext = track === 'quantum'
-    ? 'quantum sensing, spin-defect qubits (e.g. hBN V_B-, NV centers), ODMR, and photonic integration'
-    : 'software engineering tools, languages, and infrastructure trends';
+    ? 'quantum sensing, photonic integration, quanum mechanics'
+    : 'software engineering tools, languages, python libraries and code quality trends';
 
   const system = `You write for "Coherence Log", a blog by a PhD researcher in quantum photonics. \
 Voice: precise, low-hype, technically credible, a working scientist's/engineer's take rather than a news aggregator. \
